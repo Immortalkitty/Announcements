@@ -1,0 +1,11 @@
+@Announcements_HostAddress = http://localhost:5193
+
+GET {{Announcements_HostAddress}}/openapi/v1.json
+Accept: application/json
+
+###
+
+GET {{Announcements_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
