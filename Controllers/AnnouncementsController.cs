@@ -25,69 +25,29 @@ public class AnnouncementsController : ControllerBase
     [HttpGet("{id}")]
     public ActionResult<AnnouncementDto> GetById(int id)
     {
-        try
-        {
-            return Ok(_announcementsService.GetById(id, CurrentAuthorId));
-        }
-        catch (KeyNotFoundException exception)
-        {
-            return NotFound(exception.Message);
-        }
+        return Ok(_announcementsService.GetById(id, CurrentAuthorId));
     }
 
     [HttpPost]
     public ActionResult Create(CreateAnnouncementDto dto)
     {
-        try
-        {
-            var newId = _announcementsService.Create(dto, CurrentAuthorId);
-            var createdAnnouncement = _announcementsService.GetById(newId, CurrentAuthorId);
+        var newId = _announcementsService.Create(dto, CurrentAuthorId);
+        var createdAnnouncement = _announcementsService.GetById(newId, CurrentAuthorId);
 
-            return CreatedAtAction(nameof(GetById), new { id = newId }, createdAnnouncement);
-        }
-        catch (InvalidOperationException exception)
-        {
-            return Conflict(exception.Message);
-        }
+        return CreatedAtAction(nameof(GetById), new { id = newId }, createdAnnouncement);
     }
 
     [HttpPut("{id}")]
     public ActionResult Update(int id, UpdateAnnouncementDto dto)
     {
-        try
-        {
-            _announcementsService.Update(id, dto, CurrentAuthorId);
-            return NoContent();
-        }
-        catch (KeyNotFoundException exception)
-        {
-            return NotFound(exception.Message);
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return Forbid();
-        }
-        catch (InvalidOperationException exception)
-        {
-            return Conflict(exception.Message);
-        }
+        _announcementsService.Update(id, dto, CurrentAuthorId);
+        return NoContent();
     }
 
     [HttpDelete("{id}")]
     public ActionResult Delete(int id)
     {
-        try
-        {
-            _announcementsService.Delete(id, CurrentAuthorId);
-            return NoContent();
-        }
-        catch (KeyNotFoundException exception)
-        {
-            return NotFound(exception.Message);
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return Forbid();
-        }
+        _announcementsService.Delete(id, CurrentAuthorId);
+        return NoContent();
     }
 }

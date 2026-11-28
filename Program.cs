@@ -1,3 +1,4 @@
+using Announcements.Middleware;
 using Announcements.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +11,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<IAnnouncementsService, AnnouncementsService>();
 
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
