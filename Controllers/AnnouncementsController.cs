@@ -1,5 +1,5 @@
 using Announcements.DTOs;
-using Announcements.Models;
+using Announcements.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Announcements.Controllers;
@@ -8,72 +8,86 @@ namespace Announcements.Controllers;
 [Route("api/[controller]")]
 public class AnnouncementsController : ControllerBase
 {
-    private static List<Announcement> _announcements = new List<Announcement>
+    private const int CurrentAuthorId = 1;
+    private readonly IAnnouncementsService _announcementsService;
+
+    public AnnouncementsController(IAnnouncementsService announcementsService)
     {
-        new Announcement
-        {
-            Id = 1,
-            Title = "Witamy",
-            Content = "To jest pierwsze ogłoszenie.",
-            AuthorId = 1
-        },
-        new Announcement
-        {
-            Id = 2,
-            Title = "Aktualności",
-            Content = "Tutaj pojawią się najnowsze informacje.",
-            AuthorId = 1
-        }
-    };
+        _announcementsService = announcementsService;
+    }
 
     [HttpGet]
     public ActionResult<IEnumerable<AnnouncementDto>> GetAll()
     {
-        var dtos = _announcements.Select(announcement => new AnnouncementDto
-        {
-            Id = announcement.Id,
-            Title = announcement.Title,
-            Content = announcement.Content,
-            CreatedAt = announcement.CreatedAt
-        });
-
-        return Ok(dtos);
+        return Ok(_announcementsService.GetAll());
     }
 
     [HttpGet("{id}")]
     public ActionResult<AnnouncementDto> GetById(int id)
     {
-        var announcement = _announcements.FirstOrDefault(item => item.Id == id);
-        if (announcement == null)
+        try
         {
-            return NotFound("Nie znaleziono takiego ogłoszenia!");
+            return Ok(_announcementsService.GetById(id, CurrentAuthorId));
         }
-
-        var dto = new AnnouncementDto
+        catch (KeyNotFoundException exception)
         {
-            Id = announcement.Id,
-            Title = announcement.Title,
-            Content = announcement.Content,
-            CreatedAt = announcement.CreatedAt
-        };
-
-        return Ok(dto);
+            return NotFound(exception.Message);
+        }
     }
 
     [HttpPost]
     public ActionResult Create(CreateAnnouncementDto dto)
     {
-        var newId = _announcements.Any() ? _announcements.Max(announcement => announcement.Id) + 1 : 1;
-        var newAnnouncement = new Announcement
+        try
         {
-            Id = newId,
-            Title = dto.Title,
-            Content = dto.Content,
-            AuthorId = 1
-        };
+            var newId = _announcementsService.Create(dto, CurrentAuthorId);
+            var createdAnnouncement = _announcementsService.GetById(newId, CurrentAuthorId);
 
-        _announcements.Add(newAnnouncement);
+            return CreatedAtAction(nameof(GetById), new { id = newId }, createdAnnouncement);
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Conflict(exception.Message);
+        }
+    }
 
-        return CreatedAtAction(nameof(GetById), new { id = newId }, dto);
+    [HttpPut("{id}")]
+    public ActionResult Update(int id, UpdateAnnouncementDto dto)
+    {
+        try
+        {
+            _announcementsService.Update(id, dto, CurrentAuthorId);
+            return NoContent();
+        }
+        catch (KeyNotFoundException exception)
+        {
+            return NotFound(exception.Message);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Conflict(exception.Message);
+        }
+    }
+
+    [HttpDelete("{id}")]
+    public ActionResult Delete(int id)
+    {
+        try
+        {
+            _announcementsService.Delete(id, CurrentAuthorId);
+            return NoContent();
+        }
+        catch (KeyNotFoundException exception)
+        {
+            return NotFound(exception.Message);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
     }
 }

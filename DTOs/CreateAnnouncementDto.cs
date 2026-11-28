@@ -11,4 +11,6 @@ public class CreateAnnouncementDto
     [Required(ErrorMessage = "Treść ogłoszenia jest wymagana.")]
     [StringLength(5000, ErrorMessage = "Treść ogłoszenia nie może przekraczać 5000 znaków.")]
     public string Content { get; set; } = string.Empty;
+
+    public DateTimeOffset? ExpiresAt { get; set; }
 }
